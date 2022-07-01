@@ -1,0 +1,96 @@
+function K = ADP(X,A,B,Q,R,K0)
+    K = K0;
+    dx = zeros(8,1);
+    dxx= zeros(64,1);
+    dux= zeros(32,1);
+    Dxx=[];XX=[];XU=[];
+    flag=1;
+    xn = 8;
+    un = 4;
+    i1=(rand(1,100)-.5)*100;
+    i2=(rand(1,100)-.5)*100;
+    i3=(rand(1,100)-.5)*100;
+    i4=(rand(1,100)-.5)*100;
+    N = 100;
+    T = 0.3;
+    curState = [];
+    for i=1:N
+        [t,X]=ode45(@mysys, [(i-1)*T,i*T],[X(end,1:xn)'; zeros(xn*xn + xn*un ,1)]);
+        Dxx = [Dxx;kron(X(end,1:xn),X(end,1:xn))-kron(X(1,1:xn),X(1,1:xn))];
+        XX = [XX;X(end,xn+1:xn+xn^2)-X(1,xn+1:xn+xn^2)];
+        XU = [XU;X(end,xn+xn^2+1:end)-X(1,xn+xn^2+1:end)]; 
+        curState = [curState ; X(end,1:xn)];
+    end
+    Dxx=processing_Dxx(Dxx);
+    P_old=zeros(xn);P=eye(xn)*10;
+    it = 0;
+    while norm(P-P_old)>1e-10 && it<16 
+        it = it+1;                        
+        P_old = P;                       
+        QK = Q + K'*R*K;                    
+        X2 = XX*kron(eye(xn),K');         
+        X1 = [Dxx, -X2-XU];               
+        Y = -XX*QK(:);                    
+        pp = X1\Y;                        
+        P = reshape_p(pp);                 
+        BPv = pp(end-(xn*un-1):end);
+        K = R\reshape(BPv,un,xn)/2; 
+    end
+    
+function dX = mysys(t,X)   
+    x = X(1:xn);    
+        if t>=2 
+            flag=0;
+        end
+    
+        if flag==1
+            u=zeros(un,1);
+            for i=i1
+                u(1)=u(1)+sin(i*t)/length(i1);
+            end
+            for i=i2
+                u(2)=u(2)+sin(i*t)/length(i2);
+            end
+            for i=i3
+                u(3)=u(3)+sin(i*t)/length(i3); 
+            end
+            for i=i4
+                u(4)=u(4)+sin(i*t)/length(i4);
+            end
+            u=-K*x + 10000*u;
+        else
+            u=-K*x;
+        end
+    dx = A *x+ B * u;
+    dxx = kron(x',x')';
+    dux = kron(x',u')';
+    dX = [dx;dxx;dux];
+end
+
+function Dxx = processing_Dxx(Dxx)
+    ij=[]; ii=[];
+    for i=1:xn
+        ii=[ii (i-1)*xn+i];
+    end
+    for i=1:xn-1
+        for j=i+1:xn
+            ij=[ij (i-1)*xn+j];
+        end
+    end
+    Dxx(:,ii) = Dxx(:,ii)/2;
+    Dxx(:,ij) = [];
+    Dxx = Dxx*2;
+end
+
+function P = reshape_p(p)
+    P = zeros(xn);
+    ij = 0;
+    for i=1:xn
+        for j=1:i
+            ij=ij+1;
+            P(i,j)=p(ij);
+            P(j,i)=P(i,j);
+        end
+    end
+end
+end
