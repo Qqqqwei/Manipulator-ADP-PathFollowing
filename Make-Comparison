@@ -1,0 +1,25 @@
+figure
+subplot(2,1,1);
+plot(1:size(Error55,2),Error55(1,:),1:size(Error55,2),Error55(2,:),1:size(Error55,2),Error55(3,:),1:size(Error55,2),Error55(4,:));
+hold on
+bandUp = plot(1:size(Error55,2),0.1*ones(1,55),'-.b');
+bandLow = plot(1:size(Error55,2),-0.1*ones(1,55),'-.b');
+xlim([0,55])
+ylim([-0.15,0.15])
+xlabel('time');
+ylabel('rad');
+legend(bandUp,'\sigma = 0.1')
+grid on
+title('n_{end} = 55')
+subplot(2,1,2);
+plot(1:size(Error115,2),Error115(1,:),1:size(Error115,2),Error115(2,:),1:size(Error115,2),Error115(3,:),1:size(Error115,2),Error115(4,:));
+hold on
+bandUp = plot(1:size(Error115,2),0.1*ones(1,115),'-.b');
+bandLow = plot(1:size(Error115,2),-0.1*ones(1,115),'-.b');
+xlim([0,115])
+ylim([-0.15,0.15])
+xlabel('time');
+ylabel('rad');
+legend(bandUp,'\sigma = 0.1')
+grid on
+title('n_{end} = 115')
